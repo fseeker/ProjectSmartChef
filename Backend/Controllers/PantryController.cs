@@ -30,13 +30,24 @@ public class PantryController : ControllerBase
     [HttpPost("{userId}")]
     public async Task<IActionResult> AddPantryItem(int userId, [FromBody] PantryRequest request)
     {
+        Console.WriteLine($"Adding pantry item for user {userId}: {request.Name} ({request.Amount} {request.Unit})");
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest("Item name is required.");
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return NotFound("User not found.");
+        if (user == null) 
+        {
+            Console.WriteLine($"User {userId} not found for pantry addition.");
+            return NotFound("User not found.");
+        }
 
-        var item = new PantryItem { Name = request.Name, UserId = userId };
+        var item = new PantryItem 
+        { 
+            Name = request.Name, 
+            UserId = userId,
+            Amount = request.Amount,
+            Unit = request.Unit ?? ""
+        };
         _context.PantryItems.Add(item);
         await _context.SaveChangesAsync();
 
@@ -47,4 +58,6 @@ public class PantryController : ControllerBase
 public class PantryRequest
 {
     public string Name { get; set; } = string.Empty;
+    public int Amount { get; set; }
+    public string? Unit { get; set; }
 }

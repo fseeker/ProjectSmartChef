@@ -2,6 +2,7 @@
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,32 +10,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(SmartChefContext))]
-    partial class SmartChefContextModelSnapshot : ModelSnapshot
+    [Migration("20260426041056_AddUserPreferences")]
+    partial class AddUserPreferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
-
-            modelBuilder.Entity("Backend.Models.CuisineType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CuisineTypes", (string)null);
-                });
 
             modelBuilder.Entity("Backend.Models.PantryItem", b =>
                 {
@@ -60,7 +43,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PantryItems", (string)null);
+                    b.ToTable("PantryItems");
                 });
 
             modelBuilder.Entity("Backend.Models.Product", b =>
@@ -90,7 +73,7 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
 
                     b.HasData(
                         new
@@ -167,6 +150,10 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("FavoriteCuisines")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -181,14 +168,7 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("Backend.Models.CuisineType", b =>
-                {
-                    b.HasOne("Backend.Models.User", null)
-                        .WithMany("FavoriteCuisines")
-                        .HasForeignKey("UserId");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Backend.Models.PantryItem", b =>
@@ -204,8 +184,6 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.User", b =>
                 {
-                    b.Navigation("FavoriteCuisines");
-
                     b.Navigation("PantryItems");
                 });
 #pragma warning restore 612, 618

@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "+5iAr4kmAaU=",
+  "dgSpecHash": "6B742r+1j/0=",
   "success": true,
   "projectFilePath": "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\Backend\\Backend.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\fahim\\.nuget\\packages\\bcrypt.net-next\\4.1.0\\bcrypt.net-next.4.1.0.nupkg.sha512",
     "C:\\Users\\fahim\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\fahim\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.7\\microsoft.aspnetcore.openapi.10.0.7.nupkg.sha512",
     "C:\\Users\\fahim\\.nuget\\packages\\microsoft.build.framework\\18.0.2\\microsoft.build.framework.18.0.2.nupkg.sha512",

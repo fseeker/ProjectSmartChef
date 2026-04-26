@@ -18,6 +18,7 @@
             <a onclick="switchTab('whattocook')">What to cook</a>
             <a onclick="switchTab('pantry')">My pantry</a>
             <a onclick="switchTab('recipes')">Recipes</a>
+            <a onclick="switchTab('profile')" id="profileNavLink" style="display: none;">Profile</a>
         </div>
         <div class="nav-actions">
             <button class="btn-outline" id="loginHeaderBtn" onclick="openLogin()">Login</button>
@@ -211,6 +212,51 @@
                         class="fa-solid fa-arrow-left"></i> Return Home</button>
             </div>
         </div>
+
+        <!-- PROFILE / PREFERENCES TAB -->
+        <div id="tab-profile" class="tab-content">
+            <section class="hero hero-shop" style="height: 250px;">
+                <div class="hero-content hero-content-left">
+                    <h1 class="hero-title hero-title-light">User Profile</h1>
+                    <p style="font-size: 1.2rem;">Manage your preferences and account settings.</p>
+                </div>
+            </section>
+            <div class="section-wrapper">
+                <div class="panel" style="max-width: 800px; margin: 0 auto;">
+                    <div id="onboardingHeader" style="display: none; text-align: center; margin-bottom: 2rem;">
+                        <h2 style="color: var(--secondary-color);">✨ Welcome to SmartChef!</h2>
+                        <p>Let's personalize your experience. Tell us about your preferences.</p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-user-gear"></i> Account Info</h3>
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Full Name</label>
+                            <input type="text" id="profileFullName" placeholder="Your Name">
+                            
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Bio</label>
+                            <textarea id="profileBio" placeholder="Tell us about your cooking style..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-utensils"></i> Preferences</h3>
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Dietary Restrictions (e.g. Vegan, Keto)</label>
+                            <input type="text" id="profileDietary" placeholder="None">
+                            
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Favorite Cuisines</label>
+                            <input type="text" id="profileCuisines" placeholder="Italian, Mexican, etc.">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 2rem;" onclick="saveUserProfile()">Save Settings</button>
+                    
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 3rem 0;">
+                    
+                    <div style="text-align: center;">
+                        <button class="btn-outline" onclick="processLogout()" style="border-color: #ff4444; color: #ff4444;">Logout Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- CART MODAL -->
@@ -235,12 +281,32 @@
     <div class="modal-overlay" id="loginModal">
         <div class="modal-box">
             <i class="fa-solid fa-times close-modal" onclick="closeLogin()"></i>
-            <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">Account Login</h2>
-            <p style="color:var(--text-muted); margin-bottom: 2rem;">Login to save your Pantry data to local storage.
-            </p>
-            <input type="text" id="usernameInput" placeholder="Enter Username (e.g. Guest)">
-            <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="processLogin()">Secure
-                Login</button>
+            
+            <!-- Login Form -->
+            <div id="loginFormSection">
+                <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">Account Login</h2>
+                <p style="color:var(--text-muted); margin-bottom: 1.5rem;">Login to save your Pantry data to your account.</p>
+                <input type="text" id="loginUsername" placeholder="Username or Email">
+                <input type="password" id="loginPassword" placeholder="Password" style="margin-top: 1rem;">
+                <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="loginBtn" onclick="processLogin()">Secure Login</button>
+                <p style="margin-top: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                    Don't have an account? <button class="btn-link" style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.9rem; text-decoration: underline; padding: 0;" onclick="toggleAuthMode('signup')">Sign up here</button>
+                </p>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupFormSection" style="display: none;">
+                <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">Create Account</h2>
+                <p style="color:var(--text-muted); margin-bottom: 1.5rem;">Join SmartChef Premium today.</p>
+                <input type="text" id="signupFullName" placeholder="Full Name">
+                <input type="text" id="signupUsername" placeholder="Username" style="margin-top: 1rem;">
+                <input type="email" id="signupEmail" placeholder="Email Address" style="margin-top: 1rem;">
+                <input type="password" id="signupPassword" placeholder="Password" style="margin-top: 1rem;">
+                <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="signupBtn" onclick="processSignup()">Create Account</button>
+                <p style="margin-top: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                    Already have an account? <span style="color: var(--primary-color); cursor: pointer;" onclick="toggleAuthMode('login')">Login here</span>
+                </p>
+            </div>
         </div>
     </div>
 

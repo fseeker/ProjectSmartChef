@@ -13,6 +13,36 @@ function switchTab(tabId) {
     window.scrollTo(0, 0);
 }
 
+// ---------------- LOGIN & AUTH ----------------
+let currentUser = null;
+const API_BASE = '/api'; 
+
+function openLogin() { 
+    console.log("Opening login modal");
+    document.getElementById('loginModal').style.display = 'flex'; 
+    toggleAuthMode('login');
+}
+function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+
+function toggleAuthMode(mode) {
+    console.log("toggleAuthMode called with:", mode);
+    const loginSec = document.getElementById('loginFormSection');
+    const signupSec = document.getElementById('signupFormSection');
+    
+    if (!loginSec || !signupSec) {
+        console.error("Critical Error: Auth sections not found in DOM");
+        return;
+    }
+
+    if (mode === 'signup') {
+        loginSec.style.display = 'none';
+        signupSec.style.display = 'block';
+    } else {
+        loginSec.style.display = 'block';
+        signupSec.style.display = 'none';
+    }
+}
+
 // ---------------- CART LOGIC ----------------
 // hi Sinem I see your work I ove you
 let cart = [];
@@ -63,46 +93,186 @@ function openCart() {
 function closeCart() { document.getElementById('cartModal').style.display = 'none'; }
 
 
-// ---------------- LOGIN & LOCAL STORAGE ----------------
-let currentUser = null;
-function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
-function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+async function processLogin() {
+    const userOrEmail = document.getElementById('loginUsername').value.trim();
+    const pass = document.getElementById('loginPassword').value;
 
-function processLogin() {
-    const val = document.getElementById('usernameInput').value.trim();
-    if (val) {
-        currentUser = val;
-        localStorage.setItem('smartchef_user', currentUser);
-        document.getElementById('loginHeaderBtn').innerText = `Hello, ${currentUser}`;
-        document.getElementById('loginHeaderBtn').classList.remove('btn-outline');
-        document.getElementById('loginHeaderBtn').classList.add('btn-primary');
-        closeLogin();
-        // Load pantry for this user
-        loadPantry();
-        alert(`Welcome ${currentUser}! Your pantry is now linked to Local Storage.`);
+    if (!userOrEmail || !pass) {
+        alert("Please enter both username/email and password.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usernameOrEmail: userOrEmail, password: pass })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            currentUser = data;
+            localStorage.setItem('smartchef_user', JSON.stringify(currentUser));
+            updateUIForLoggedInUser();
+            closeLogin();
+            loadPantry();
+            alert(`Welcome back, ${currentUser.fullName || currentUser.username}!`);
+        } else {
+            alert(data.message || "Login failed.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server error during login.");
+    }
+}
+
+async function processSignup() {
+    const fullName = document.getElementById('signupFullName').value.trim();
+    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+
+    if (!username || !email || !password) {
+        alert("Username, email, and password are required.");
+        return;
+    }
+
+    console.log("Attempting signup with:", { fullName, username, email });
+    try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullName, username, email, password })
+        });
+        console.log("Signup response status:", res.status);
+
+        const data = await res.json();
+        if (res.ok) {
+            alert("Account created! Please login.");
+            toggleAuthMode('login');
+            // After signup, we'll mark a flag to show onboarding once they login
+            localStorage.setItem('show_onboarding', 'true');
+        } else {
+            alert(data.message || "Signup failed.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server error during signup.");
+    }
+}
+
+function updateUIForLoggedInUser() {
+    if (currentUser) {
+        const btn = document.getElementById('loginHeaderBtn');
+        btn.innerText = `Hello, ${currentUser.username}`;
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-primary');
+        
+        // Show profile link
+        document.getElementById('profileNavLink').style.display = 'inline-block';
+        
+        // Check for onboarding
+        if (localStorage.getItem('show_onboarding') === 'true') {
+            localStorage.removeItem('show_onboarding');
+            switchTab('profile');
+            document.getElementById('onboardingHeader').style.display = 'block';
+        }
+        
+        loadUserProfile();
+    }
+}
+
+function processLogout() {
+    currentUser = null;
+    localStorage.removeItem('smartchef_user');
+    location.reload(); // Simplest way to reset state
+}
+
+async function loadUserProfile() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(`${API_BASE}/user/${currentUser.id}`);
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('profileFullName').value = data.fullName || '';
+            document.getElementById('profileBio').value = data.bio || '';
+            document.getElementById('profileDietary').value = data.dietaryPreferences || '';
+            document.getElementById('profileCuisines').value = data.favoriteCuisines || '';
+        }
+    } catch (err) {
+        console.error("Error loading profile:", err);
+    }
+}
+
+async function saveUserProfile() {
+    if (!currentUser) return;
+    
+    const fullName = document.getElementById('profileFullName').value;
+    const bio = document.getElementById('profileBio').value;
+    const dietaryPreferences = document.getElementById('profileDietary').value;
+    const favoriteCuisines = document.getElementById('profileCuisines').value;
+
+    try {
+        const res = await fetch(`${API_BASE}/user/${currentUser.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullName, bio, dietaryPreferences, favoriteCuisines })
+        });
+
+        if (res.ok) {
+            alert("Profile updated successfully!");
+            document.getElementById('onboardingHeader').style.display = 'none';
+        } else {
+            alert("Failed to update profile.");
+        }
+    } catch (err) {
+        console.error("Error saving profile:", err);
+        alert("Server error saving profile.");
     }
 }
 
 // Auto-login if previously saved
 window.onload = function () {
-    const savedUser = localStorage.getItem('smartchef_user');
-    if (savedUser) {
-        document.getElementById('usernameInput').value = savedUser;
-        processLogin();
+    const saved = localStorage.getItem('smartchef_user');
+    if (saved) {
+        currentUser = JSON.parse(saved);
+        updateUIForLoggedInUser();
+        loadPantry();
     } else {
-        fetchLiveProducts(); // run fetch directly if no auth blocker
+        fetchLiveProducts(); 
     }
 }
 
 // ---------------- PANTRY LOGIC ----------------
 let pantryItems = [];
-function addPantryItem() {
+async function addPantryItem() {
     const val = document.getElementById('pantryInput').value.trim();
     if (val) {
-        pantryItems.push(val);
-        document.getElementById('pantryInput').value = '';
-        renderPantry();
-        savePantry();
+        if (currentUser) {
+            try {
+                const res = await fetch(`${API_BASE}/pantry/${currentUser.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: val })
+                });
+                if (res.ok) {
+                    pantryItems.push(val);
+                    renderPantry();
+                    document.getElementById('pantryInput').value = '';
+                } else {
+                    alert("Failed to save to cloud pantry.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Server error adding pantry item.");
+            }
+        } else {
+            // Fallback for guest
+            pantryItems.push(val);
+            document.getElementById('pantryInput').value = '';
+            renderPantry();
+            savePantryLocal();
+        }
     }
 }
 
@@ -114,17 +284,32 @@ function renderPantry() {
     });
 }
 
-function savePantry() {
+function savePantryLocal() {
     if (currentUser) {
-        localStorage.setItem(`pantry_${currentUser}`, JSON.stringify(pantryItems));
+        localStorage.setItem(`pantry_${currentUser.id}`, JSON.stringify(pantryItems));
     }
 }
 
-function loadPantry() {
+async function loadPantry() {
     if (currentUser) {
-        const saved = localStorage.getItem(`pantry_${currentUser}`);
-        if (saved) pantryItems = JSON.parse(saved);
-        renderPantry();
+        try {
+            const res = await fetch(`${API_BASE}/pantry/${currentUser.id}`);
+            if (res.ok) {
+                pantryItems = await res.json();
+                renderPantry();
+            } else {
+                // Fallback to local
+                const saved = localStorage.getItem(`pantry_${currentUser.id}`);
+                if (saved) pantryItems = JSON.parse(saved);
+                renderPantry();
+            }
+        } catch (err) {
+            console.error(err);
+            // Fallback to local
+            const saved = localStorage.getItem(`pantry_${currentUser.id}`);
+            if (saved) pantryItems = JSON.parse(saved);
+            renderPantry();
+        }
     }
     fetchLiveProducts();
 }
@@ -136,50 +321,38 @@ function suggestRecipes() {
     generateAIRecipes();
 }
 
-// ---------------- OPEN FOOD FACTS API LOGIC (SHOP) ----------------
+// ---------------- LOCAL DATABASE PRODUCTS LOGIC (SHOP) ----------------
 let currentCategory = 'all';
 let liveProducts = [];
 
 async function fetchLiveProducts(category = 'all') {
-    document.getElementById('shopLoadingText').style.display = 'block';
-
-    let url = 'https://world.openfoodfacts.org/api/v2/search?fields=code,product_name,brands,image_front_url&page_size=60';
-    if (category !== 'all') {
-        url += `&categories_tags=en:${category}`;
-    }
+    console.log("Fetching local products for category:", category);
+    const loadingText = document.getElementById('shopLoadingText');
+    if (loadingText) loadingText.style.display = 'block';
 
     try {
-        const res = await fetch(url);
+        const res = await fetch(`${API_BASE}/products?category=${category}`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        
         const data = await res.json();
+        console.log("Local products received:", data.length);
 
-        // Map Open Food Facts data, assign mock prices
-        liveProducts = data.products.map((p, index) => {
+        // Map local DB products
+        liveProducts = data.map(p => {
             return {
-                id: p.code || (1000 + index),
-                title: p.product_name || 'Generic Food Item',
-                thumbnail: p.image_front_url || 'https://via.placeholder.com/150/1E1E1E/FF5A00?text=Grocery',
-                brand: p.brands || 'Local Farm',
-                price: parseFloat(((Math.random() * 10) + 1.99).toFixed(2)) // Mock realistic price
+                id: p.id,
+                title: p.title,
+                thumbnail: p.thumbnail || 'https://via.placeholder.com/150/1E1E1E/FF5A00?text=Grocery',
+                brand: p.brand || 'Local Farm',
+                price: p.price || 5.99
             };
         });
 
-        // Pad the catalog to reach 1000+ items as requested
-        const brands = ["Great Value", "Freshness Guaranteed", "Marketside", "Organic", "Equate", "Chef's Choice", "Farm Fresh", "Nature's Path"];
-        const types = ["Produce", "Canned Goods", "Dry Pasta", "Rice", "Cereal", "Coffee", "Tea", "Apple", "Banana", "Carrot", "Broccoli", "Tomato", "Spinach", "Grapes", "Orange", "Lettuce", "Strawberry", "Watermelon", "Potato"];
-        for (let i = 0; i < 950; i++) {
-            liveProducts.push({
-                id: 5000 + i,
-                title: `${brands[Math.floor(Math.random() * brands.length)]} ${types[Math.floor(Math.random() * types.length)]}`,
-                price: parseFloat(((Math.random() * 10) + 1.99).toFixed(2)),
-                thumbnail: 'https://via.placeholder.com/150/1E1E1E/FF5A00?text=Grocery',
-                brand: 'Simulated Catalog'
-            });
-        }
-
-        document.getElementById('shopLoadingText').style.display = 'none';
-        renderShop(liveProducts.slice(0, 60));
+        if (loadingText) loadingText.style.display = 'none';
+        renderShop(liveProducts);
     } catch (err) {
-        document.getElementById('shopLoadingText').innerText = "Failed to load Open Food Facts API.";
+        console.error("Error fetching local products:", err);
+        if (loadingText) loadingText.innerText = "Failed to load local products. Ensure backend is running.";
     }
 }
 

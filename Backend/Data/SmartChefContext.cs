@@ -12,6 +12,7 @@ public class SmartChefContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<PantryItem> PantryItems { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<CuisineType> CuisineTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

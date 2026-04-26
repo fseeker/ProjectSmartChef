@@ -1,0 +1,8 @@
+# Only allow smartchef.db in this directory, not in subdirectories
+bin/
+obj/
+*.sln.DotSettings.user
+
+# Prevent database files anywhere except this folder
+**/bin/**/smartchef.db
+**/obj/**/smartchef.db
