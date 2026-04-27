@@ -8,7 +8,7 @@ RUN dotnet publish Backend/Backend.csproj -c Release -o out
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
-WORKDIR /app
+WORKDIR /app/Backend
 COPY --from=build /app/out ./
 
 # Copy frontend files so the backend can serve them
