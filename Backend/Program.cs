@@ -50,27 +50,31 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<SmartChefContext>();
     dbContext.Database.Migrate();
 
-    // AUTO-SEEDING
+    // AUTO-SEEDING (All .sql files in seed folder)
     if (!dbContext.Set<Backend.Models.Product>().Any())
     {
-        Console.WriteLine("[INIT] Database is empty. Running seed script...");
-        string seedPath = Path.Combine(frontendDir ?? projectRoot, "seed", "seed_products.sql");
-        if (File.Exists(seedPath))
+        string seedDir = Path.Combine(frontendDir ?? projectRoot, "seed");
+        if (Directory.Exists(seedDir))
         {
-            try
+            var seedFiles = Directory.GetFiles(seedDir, "*.sql").OrderBy(f => f);
+            foreach (var file in seedFiles)
             {
-                var sql = File.ReadAllText(seedPath);
-                dbContext.Database.ExecuteSqlRaw(sql);
-                Console.WriteLine("[INIT] Seeding complete.");
+                try
+                {
+                    Console.WriteLine($"[INIT] Executing seed script: {Path.GetFileName(file)}");
+                    var sql = File.ReadAllText(file);
+                    dbContext.Database.ExecuteSqlRaw(sql);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[INIT] Seeding failed for {Path.GetFileName(file)}: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[INIT] Seeding failed: {ex.Message}");
-            }
+            Console.WriteLine("[INIT] All seeding operations complete.");
         }
         else
         {
-            Console.WriteLine($"[INIT] Seed file not found at: {seedPath}");
+            Console.WriteLine($"[INIT] Seed directory not found at: {seedDir}");
         }
     }
 }
