@@ -42,6 +42,19 @@ builder.Services.AddCors(options =>
     });
 });
 
+// 3. FRONTEND PATH DISCOVERY
+string? frontendDir = null;
+var searchDir = new DirectoryInfo(projectRoot);
+while (searchDir != null)
+{
+    if (File.Exists(Path.Combine(searchDir.FullName, "index.html")))
+    {
+        frontendDir = searchDir.FullName;
+        break;
+    }
+    searchDir = searchDir.Parent;
+}
+
 var app = builder.Build();
 
 // 3. DATABASE MIGRATIONS & SEEDING
@@ -85,18 +98,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // 5. CLEAN STATIC FILE SERVING
-string? frontendDir = null;
-var searchDir = new DirectoryInfo(projectRoot);
-while (searchDir != null)
-{
-    if (File.Exists(Path.Combine(searchDir.FullName, "index.html")))
-    {
-        frontendDir = searchDir.FullName;
-        break;
-    }
-    searchDir = searchDir.Parent;
-}
-
 if (frontendDir != null)
 {
     Console.WriteLine($"[INIT] Serving Frontend from: {frontendDir}");

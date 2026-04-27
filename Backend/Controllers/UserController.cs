@@ -37,7 +37,7 @@ public class UserController : ControllerBase
             Allergies = user.Allergies.Select(a => new { a.Id, a.Title }).ToList(),
             TastePalates = user.TastePalates.Select(tp => new { 
                 TasteId = tp.TasteId, 
-                Name = tp.Taste.Name, 
+                Name = tp.Taste?.Name ?? "Unknown", 
                 Rating = tp.Rating 
             }).ToList()
         });
