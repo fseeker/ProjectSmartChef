@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\Backend\\Backend.csproj": {}
+    "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\backend\\Backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\Backend\\Backend.csproj": {
+    "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\backend\\Backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\Backend\\Backend.csproj",
+        "projectUniqueName": "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\backend\\Backend.csproj",
         "projectName": "Backend",
-        "projectPath": "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\Backend\\Backend.csproj",
+        "projectPath": "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\backend\\Backend.csproj",
         "packagesPath": "C:\\Users\\fahim\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\Backend\\obj\\",
+        "outputPath": "C:\\Users\\fahim\\Downloads\\ProjectSmartChef\\projectPath\\ProjectSmartChef\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -20,8 +20,17 @@ public class PantryController : ControllerBase
     public async Task<IActionResult> GetPantryItems(int userId)
     {
         var items = await _context.PantryItems
+            .Include(p => p.Unit)
+            .Include(p => p.Product)
             .Where(p => p.UserId == userId)
-            .Select(p => p.Name)
+            .Select(p => new {
+                p.Id,
+                Name = p.Name ?? p.Product!.Title,
+                p.ProductId,
+                p.Amount,
+                p.UnitId,
+                UnitName = p.Unit != null ? p.Unit.Name : ""
+            })
             .ToListAsync();
             
         return Ok(items);
@@ -30,9 +39,9 @@ public class PantryController : ControllerBase
     [HttpPost("{userId}")]
     public async Task<IActionResult> AddPantryItem(int userId, [FromBody] PantryRequest request)
     {
-        Console.WriteLine($"Adding pantry item for user {userId}: {request.Name} ({request.Amount} {request.Unit})");
-        if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest("Item name is required.");
+        Console.WriteLine($"Adding pantry item for user {userId}: {request.Name ?? request.ProductId?.ToString()} ({request.Amount} UnitId: {request.UnitId})");
+        if (string.IsNullOrWhiteSpace(request.Name) && request.ProductId == null)
+            return BadRequest("Item name or ProductId is required.");
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null) 
@@ -44,9 +53,10 @@ public class PantryController : ControllerBase
         var item = new PantryItem 
         { 
             Name = request.Name, 
+            ProductId = request.ProductId,
             UserId = userId,
             Amount = request.Amount,
-            Unit = request.Unit ?? ""
+            UnitId = request.UnitId
         };
         _context.PantryItems.Add(item);
         await _context.SaveChangesAsync();
@@ -57,7 +67,8 @@ public class PantryController : ControllerBase
 
 public class PantryRequest
 {
-    public string Name { get; set; } = string.Empty;
-    public int Amount { get; set; }
-    public string? Unit { get; set; }
+    public string? Name { get; set; }
+    public int? ProductId { get; set; }
+    public decimal Amount { get; set; }
+    public int UnitId { get; set; }
 }

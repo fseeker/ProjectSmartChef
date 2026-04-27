@@ -21,48 +21,38 @@ public class UserController : ControllerBase
     {
         var user = await _context.Users
             .Include(u => u.FavoriteCuisines)
+            .Include(u => u.Allergies)
+            .Include(u => u.UserType)
+            .Include(u => u.TastePalates)
+                .ThenInclude(tp => tp.Taste)
             .FirstOrDefaultAsync(u => u.Id == id);
 
         if (user == null) return NotFound();
         
         return Ok(new { 
-            user.Id, user.Username, user.FullName, user.Email, 
-            user.DietaryPreferences, 
-            FavoriteCuisines = string.Join(", ", user.FavoriteCuisines.Select(c => c.Name)),
-            user.Bio 
+            user.Id, user.Username, user.FullName, user.Email,
+            user.Bio, user.CookingSkill,
+            UserTypeName = user.UserType?.Name ?? "Customer",
+            FavoriteCuisines = user.FavoriteCuisines.Select(c => new { c.Id, c.Name }).ToList(),
+            Allergies = user.Allergies.Select(a => new { a.Id, a.Title }).ToList(),
+            TastePalates = user.TastePalates.Select(tp => new { 
+                TasteId = tp.TasteId, 
+                Name = tp.Taste.Name, 
+                Rating = tp.Rating 
+            }).ToList()
         });
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProfile(int id, [FromBody] UserProfileUpdate request)
     {
-        Console.WriteLine($"Updating profile for user {id}. Name: {request.FullName}, Bio: {request.Bio}");
-        var user = await _context.Users
-            .Include(u => u.FavoriteCuisines)
-            .FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
             
-        if (user == null) 
-        {
-            Console.WriteLine($"User {id} not found!");
-            return NotFound();
-        }
+        if (user == null) return NotFound();
 
         user.FullName = request.FullName ?? user.FullName;
-        user.DietaryPreferences = request.DietaryPreferences ?? user.DietaryPreferences;
+        user.CookingSkill = request.CookingSkill ?? user.CookingSkill;
         user.Bio = request.Bio ?? user.Bio;
-
-        if (request.FavoriteCuisines != null)
-        {
-            // Clear existing and re-add
-            user.FavoriteCuisines.Clear();
-            var cuisines = request.FavoriteCuisines.Split(',')
-                .Select(c => c.Trim())
-                .Where(c => !string.IsNullOrEmpty(c))
-                .Select(c => new CuisineType { Name = c })
-                .ToList();
-            
-            user.FavoriteCuisines.AddRange(cuisines);
-        }
 
         await _context.SaveChangesAsync();
         return Ok(user);
@@ -72,7 +62,6 @@ public class UserController : ControllerBase
 public class UserProfileUpdate
 {
     public string? FullName { get; set; }
-    public string? DietaryPreferences { get; set; }
-    public string? FavoriteCuisines { get; set; }
+    public int? CookingSkill { get; set; }
     public string? Bio { get; set; }
 }

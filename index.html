@@ -17,11 +17,24 @@
             <a onclick="switchTab('shop')">Shop</a>
             <a onclick="switchTab('whattocook')">What to cook</a>
             <a onclick="switchTab('pantry')">My pantry</a>
-            <a onclick="switchTab('recipes')">Recipes</a>
-            <a onclick="switchTab('profile')" id="profileNavLink" style="display: none;">Profile</a>
         </div>
         <div class="nav-actions">
-            <button class="btn-outline" id="loginHeaderBtn" onclick="openLogin()">Login</button>
+            <!-- Guest State -->
+            <button class="btn-outline" id="loginHeaderBtn" onclick="openLogin()"><i class="fa-solid fa-user"></i> Sign up/Log in</button>
+            
+            <!-- Logged-in State -->
+            <div class="user-menu" id="userMenu" style="display:none; position:relative;">
+                <button class="user-menu-btn" onclick="toggleUserDropdown()" id="userMenuBtn">
+                    <span id="userGreeting" style="font-weight: 600;">Username</span>
+                    <i class="fa-solid fa-chevron-down" id="userMenuChevron"></i>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <button class="dropdown-item" onclick="switchTab('profile'); toggleUserDropdown()">Profile</button>
+                    <button class="dropdown-item" onclick="switchTab('orders'); toggleUserDropdown()">Previous transactions</button>
+                    <button class="dropdown-item dropdown-item-danger" onclick="processLogout()">Log out</button>
+                </div>
+            </div>
+
             <button class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;" onclick="openCart()">
                 <i class="fa-solid fa-cart-shopping"></i> <span id="cartCount">0</span>
             </button>
@@ -58,11 +71,16 @@
                     <button class="category-btn active" onclick="setCategory('all', this)">All Products</button>
                     <button class="category-btn" onclick="setCategory('vegetables', this)">Vegetables</button>
                     <button class="category-btn" onclick="setCategory('fruits', this)">Fruits</button>
+                    <button class="category-btn" onclick="setCategory('bakery', this)">Bakery</button>
                     <button class="category-btn" onclick="setCategory('snacks', this)">Snacks</button>
                     <button class="category-btn" onclick="setCategory('beverages', this)">Beverages</button>
                     <button class="category-btn" onclick="setCategory('dairies', this)">Dairy</button>
                     <button class="category-btn" onclick="setCategory('meats', this)">Meats</button>
                     <button class="category-btn" onclick="setCategory('sauces', this)">Sauces</button>
+                    <button class="category-btn" onclick="setCategory('spices', this)">Spices</button>
+                    <button class="category-btn" onclick="setCategory('pantry', this)">Pantry</button>
+                    <button class="category-btn" onclick="setCategory('breakfast', this)">Breakfast</button>
+                    <button class="category-btn" onclick="setCategory('canned', this)">Canned Goods</button>
                 </div>
                 <div style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: stretch;">
                     <input type="text" id="shopSearchInput" onkeyup="filterShop()"
@@ -87,65 +105,62 @@
                 </div>
             </section>
             <div class="section-wrapper">
-                <div class="wtc-container">
-                    <div class="wtc-sidebar">
-                        <div class="panel">
-                            <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI Research</h3>
-                            <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">Tell us what's
-                                in your pantry, and our AI will generate a custom recipe.</p>
-                            <textarea id="aiPantryInput"
-                                placeholder="E.g., I have chicken, tomatoes, and pasta..."></textarea>
-                            <button class="btn btn-primary" style="width: 100%;" onclick="generateAIRecipes()"><i
-                                    class="fa-solid fa-robot"></i> Ask AI</button>
+                <div class="ai-recipe-container" style="max-width: 800px; margin: 0 auto; background: var(--bg-panel); padding: 2rem; border-radius: 8px;">
+                    <h2 style="margin-bottom: 1.5rem; text-align: center;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-color);"></i> Design Your Meal</h2>
+                    
+                    <!-- Filter 1: Style -->
+                    <div class="ai-filter-section">
+                        <label style="font-weight: bold; color: var(--text-main);">Do you want it:</label>
+                        <select id="aiFilterStyle" class="filter-select" style="width: 100%; margin-top: 0.5rem; padding: 0.8rem; background: var(--bg-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: var(--text-main);">
+                            <option value="fast">Fast</option>
+                            <option value="fancy">Fancy</option>
+                            <option value="easy">Easy to make</option>
+                            <option value="healthy">Healthy</option>
+                            <option value="comfort">Comfort</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 2: Budget/Extra -->
+                    <div class="ai-filter-section" style="margin-top: 1.5rem;">
+                        <label style="font-weight: bold; color: var(--text-main);">Need something extra?</label>
+                        <select id="aiFilterBudget" class="filter-select" style="width: 100%; margin-top: 0.5rem; padding: 0.8rem; background: var(--bg-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: var(--text-main);" onchange="toggleCustomBudget()">
+                            <option value="pantry">No, only from pantry</option>
+                            <option value="10">10 USD extra</option>
+                            <option value="20">20 USD extra</option>
+                            <option value="custom">Set spending amount</option>
+                        </select>
+                        <div id="customBudgetContainer" style="display: none; margin-top: 0.8rem;">
+                            <input type="number" id="aiCustomBudget" placeholder="Enter amount in USD" style="width: 100%; margin-bottom: 0;">
                         </div>
                     </div>
-                    <div class="wtc-main">
-                        <div class="category-bar" style="margin-bottom: 1rem;">
-                            <button class="category-btn active" onclick="setRibbonFilter('all', this)">Mix</button>
-                            <button class="category-btn" onclick="setRibbonFilter('time-15', this)"><i
-                                    class="fa-solid fa-clock"></i> Under 15m</button>
-                            <button class="category-btn" onclick="setRibbonFilter('time-30', this)"><i
-                                    class="fa-solid fa-clock"></i> Under 30m</button>
-                            <button class="category-btn"
-                                onclick="setRibbonFilter('cat-Vegetarian', this)">Vegetarian</button>
-                            <button class="category-btn" onclick="setRibbonFilter('cat-Meat', this)">Meat</button>
-                            <button class="category-btn" onclick="setRibbonFilter('cat-Seafood', this)">Seafood</button>
-                        </div>
-                        <select id="filterCuisine" class="filter-select" onchange="search5000Recipes()"
-                            style="margin-bottom: 1rem;">
-                            <option value="all">🌍 All Cuisines</option>
-                            <option value="Chinese">Chinese</option>
-                            <option value="Indian">Indian</option>
-                            <option value="French">French</option>
-                            <option value="Mexican">Mexican</option>
-                            <option value="Thai">Thai</option>
-                            <option value="Mediterranean">Mediterranean</option>
-                            <option value="American">American</option>
-                            <option value="Italian">Italian</option>
-                            <option value="Korean">Korean</option>
-                            <option value="Japanese">Japanese</option>
+
+                    <!-- Filter 3: Taste -->
+                    <div class="ai-filter-section" style="margin-top: 1.5rem;">
+                        <label style="font-weight: bold; color: var(--text-main);">What are you in the mood for?</label>
+                        <select id="aiFilterTaste" class="filter-select" style="width: 100%; margin-top: 0.5rem; padding: 0.8rem; background: var(--bg-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: var(--text-main);">
+                            <option value="surprise">Surprise me</option>
+                            <option value="preferred">My preferred taste</option>
+                            <option value="Sweet">Sweet</option>
+                            <option value="Salty">Salty</option>
+                            <option value="Sour">Sour</option>
+                            <option value="Bitter">Bitter</option>
+                            <option value="Umami">Umami</option>
                         </select>
-                        <input type="text" id="recipeSearchInput" onkeyup="search5000Recipes()"
-                            placeholder="Search 5,000+ recipes (e.g., pasta, chicken, cake)...">
-                        <div
-                            style="margin-bottom: 1.5rem; display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
-                            <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="fa-solid fa-fire"></i>
-                                Most sought for:</span>
-                            <button class="category-btn" style="padding: 0.3rem 1rem; font-size: 0.85rem;"
-                                onclick="document.getElementById('recipeSearchInput').value='Garlic Salmon'; search5000Recipes();">Garlic
-                                Salmon</button>
-                            <button class="category-btn" style="padding: 0.3rem 1rem; font-size: 0.85rem;"
-                                onclick="document.getElementById('recipeSearchInput').value='Taco'; search5000Recipes();">Tacos</button>
-                            <button class="category-btn" style="padding: 0.3rem 1rem; font-size: 0.85rem;"
-                                onclick="document.getElementById('recipeSearchInput').value='Curry'; search5000Recipes();">Curry</button>
-                            <button class="category-btn" style="padding: 0.3rem 1rem; font-size: 0.85rem;"
-                                onclick="document.getElementById('recipeSearchInput').value='Steak'; search5000Recipes();">Steak</button>
+                    </div>
+
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 2rem; font-size: 1.2rem; padding: 1rem;" onclick="generateAIRecipe()">
+                        <i class="fa-solid fa-robot"></i> Generate Recipe with AI
+                    </button>
+
+                    <!-- Loading / Output Container -->
+                    <div id="aiRecipeOutputContainer" style="margin-top: 2rem; display: none; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div id="aiLoading" style="text-align: center; display: none;">
+                            <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary-color); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--text-muted);">AI is brainstorming your perfect recipe...</p>
                         </div>
-                        <div id="aiGenerating" class="ai-generating">Thinking... <i
-                                class="fa-solid fa-spinner fa-spin"></i></div>
-                        <p style="color: var(--secondary-color); margin-bottom: 2rem;" id="recipeResultCount">Showing
-                            top suggestions out of 5,000 indexed recipes:</p>
-                        <div class="grid-container" id="recipeSearchResultsContainer"></div>
+                        <div id="aiRecipeContent" style="display: none; line-height: 1.6; background: var(--bg-main); padding: 1.5rem; border-radius: 8px;">
+                            <!-- Recipe output goes here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -166,12 +181,18 @@
                         <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-box"></i> Saved Inventory</h3>
                         <p style="margin-bottom: 1rem; color: var(--text-muted);">Data is saved to your Local Storage
                             when logged in!</p>
-                        <div class="flex">
-                            <input type="text" id="pantryInput" placeholder="Add an item (e.g. Milk)"
-                                onkeydown="if(event.key === 'Enter') addPantryItem()">
-                            <button class="btn btn-primary" onclick="addPantryItem()">Add</button>
+                        <div style="position: relative; margin-bottom: 1rem;">
+                            <input type="text" id="pantryInput" placeholder="Item Name (e.g. Milk) - Search Shop or Custom" oninput="searchPantryProducts()" onfocus="searchPantryProducts()" style="width: 100%; margin-bottom: 0;">
+                            <div id="pantrySearchResults" class="search-results"></div>
                         </div>
-                        <div id="pantryList" style="margin-top: 1rem; margin-bottom: 2rem;"></div>
+                        <div class="flex" style="gap: 0.5rem; align-items: stretch;">
+                            <input type="number" id="pantryAmountInput" placeholder="Qty" style="flex: 1; margin-bottom: 0;" step="any">
+                            <select id="pantryUnitSelect" style="flex: 1.5; margin-bottom: 0; padding: 0.8rem; background: var(--bg-main); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;">
+                                <option value="">Select Unit</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="addPantryItem()" style="flex: 1;">Add Item</button>
+                        </div>
+                        <div id="pantryList" style="margin-top: 2rem; margin-bottom: 2rem;"></div>
                         <button class="btn-outline" style="width: 100%;" onclick="suggestRecipes()">✨ Suggest Recipes
                             From Pantry</button>
                     </div>
@@ -213,51 +234,102 @@
             </div>
         </div>
 
-        <!-- PROFILE / PREFERENCES TAB -->
+        <!-- PROFILE TAB -->
         <div id="tab-profile" class="tab-content">
-            <section class="hero hero-shop" style="height: 250px;">
+            <section class="hero hero-shop" style="height: 280px;">
                 <div class="hero-content hero-content-left">
-                    <h1 class="hero-title hero-title-light">User Profile</h1>
-                    <p style="font-size: 1.2rem;">Manage your preferences and account settings.</p>
+                    <h1 class="hero-title hero-title-light" id="profileHeroName">Your Profile</h1>
+                    <p style="font-size: 1.1rem; color: rgba(255,255,255,0.7);" id="profileHeroMeta">Cooking enthusiast</p>
                 </div>
             </section>
-            <div class="section-wrapper">
-                <div class="panel" style="max-width: 800px; margin: 0 auto;">
-                    <div id="onboardingHeader" style="display: none; text-align: center; margin-bottom: 2rem;">
-                        <h2 style="color: var(--secondary-color);">✨ Welcome to SmartChef!</h2>
-                        <p>Let's personalize your experience. Tell us about your preferences.</p>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+
+            <div class="section-wrapper" style="max-width: 900px;">
+                <!-- Profile Tabs -->
+                <div class="profile-tabs" id="profileTabBar">
+                    <button class="profile-tab active" onclick="switchProfileTab('account', this)"><i class="fa-solid fa-user-gear"></i> Account</button>
+                    <button class="profile-tab" onclick="switchProfileTab('allergies', this)"><i class="fa-solid fa-triangle-exclamation"></i> Allergies</button>
+                    <button class="profile-tab" onclick="switchProfileTab('cuisines', this)"><i class="fa-solid fa-earth-americas"></i> Cuisines</button>
+                    <button class="profile-tab" onclick="switchProfileTab('taste', this)"><i class="fa-solid fa-star-half-stroke"></i> Taste Profile</button>
+                    <button class="profile-tab" onclick="switchProfileTab('cooking', this)"><i class="fa-solid fa-fire-burner"></i> Cooking</button>
+                </div>
+
+                <!-- ACCOUNT TAB -->
+                <div class="profile-section active panel" id="profile-account">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-id-card"></i> Account Info</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <div>
-                            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-user-gear"></i> Account Info</h3>
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Full Name</label>
-                            <input type="text" id="profileFullName" placeholder="Your Name">
-                            
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Bio</label>
-                            <textarea id="profileBio" placeholder="Tell us about your cooking style..." style="min-height: 80px;"></textarea>
+                            <label class="profile-label">Full Name</label>
+                            <input type="text" id="profileFullName" placeholder="Your full name">
                         </div>
                         <div>
-                            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-utensils"></i> Preferences</h3>
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Dietary Restrictions (e.g. Vegan, Keto)</label>
-                            <input type="text" id="profileDietary" placeholder="None">
-                            
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Favorite Cuisines</label>
-                            <input type="text" id="profileCuisines" placeholder="Italian, Mexican, etc.">
+                            <label class="profile-label">Username</label>
+                            <input type="text" id="profileUsername" placeholder="Username" disabled style="opacity:0.5; cursor:not-allowed;">
+                        </div>
+                        <div>
+                            <label class="profile-label">Email</label>
+                            <input type="email" id="profileEmail" placeholder="Email" disabled style="opacity:0.5; cursor:not-allowed;">
+                        </div>
+                        <div>
+                            <label class="profile-label">Account Type</label>
+                            <input type="text" id="profileUserType" placeholder="Customer" disabled style="opacity:0.5; cursor:not-allowed;">
                         </div>
                     </div>
-                    
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 2rem;" onclick="saveUserProfile()">Save Settings</button>
-                    
-                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 3rem 0;">
-                    
-                    <div style="text-align: center;">
-                        <button class="btn-outline" onclick="processLogout()" style="border-color: #ff4444; color: #ff4444;">Logout Account</button>
+                    <div style="margin-top: 1.5rem;">
+                        <label class="profile-label">Bio</label>
+                        <textarea id="profileBio" placeholder="Tell us about your food journey..." style="min-height: 100px;"></textarea>
                     </div>
+                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="saveProfileAccount()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+                </div>
+
+                <!-- ALLERGIES TAB -->
+                <div class="profile-section panel" id="profile-allergies">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-triangle-exclamation"></i> Allergies & Avoidances</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Products you avoid. These help SmartChef tailor recommendations.</p>
+                    <div style="position: relative;">
+                        <input type="text" id="profileAllergySearch" placeholder="Search to add (e.g. Peanuts)..." onkeyup="searchProfileAllergies()">
+                        <div id="profileAllergyResults" class="search-results"></div>
+                    </div>
+                    <div id="profileAllergyTags" class="tag-container" style="min-height: 50px;"></div>
+                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="saveProfileAllergies()"><i class="fa-solid fa-floppy-disk"></i> Save Allergies</button>
+                </div>
+
+                <!-- CUISINES TAB -->
+                <div class="profile-section panel" id="profile-cuisines">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-earth-americas"></i> Favorite Cuisines</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Your top global flavors.</p>
+                    <div style="position: relative;">
+                        <input type="text" id="profileCuisineSearch" placeholder="Search cuisines..." onkeyup="searchProfileCuisines()">
+                        <div id="profileCuisineResults" class="search-results"></div>
+                    </div>
+                    <div id="profileCuisineTags" class="tag-container" style="min-height: 50px;"></div>
+                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="saveProfileCuisines()"><i class="fa-solid fa-floppy-disk"></i> Save Cuisines</button>
+                </div>
+
+                <!-- TASTE PROFILE TAB -->
+                <div class="profile-section panel" id="profile-taste">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-star-half-stroke"></i> Taste Palate</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Rate how much you enjoy each flavor family.</p>
+                    <div id="profileTasteSliders" style="display: flex; flex-direction: column; gap: 1.2rem;"></div>
+                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="saveProfileTastes()"><i class="fa-solid fa-floppy-disk"></i> Save Taste Profile</button>
+                </div>
+
+                <!-- COOKING TAB -->
+                <div class="profile-section panel" id="profile-cooking">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-fire-burner"></i> Cooking Skill</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">How would you rate your cooking skill?</p>
+                    <div class="taste-slider-group">
+                        <label><span>Skill Level</span> <span id="profileSkillVal" style="color: var(--primary-color); font-weight: 800;">5</span> / 10</label>
+                        <input type="range" id="profileCookingSkill" min="1" max="10" value="5" oninput="document.getElementById('profileSkillVal').innerText = this.value">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+                            <span>🥄 Beginner</span>
+                            <span>Intermediate</span>
+                            <span>👨‍🍳 Expert Chef</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="saveProfileCooking()"><i class="fa-solid fa-floppy-disk"></i> Save Skill</button>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- CART MODAL -->
     <div class="modal-overlay" id="cartModal">
@@ -281,30 +353,118 @@
     <div class="modal-overlay" id="loginModal">
         <div class="modal-box">
             <i class="fa-solid fa-times close-modal" onclick="closeLogin()"></i>
-            
+
             <!-- Login Form -->
             <div id="loginFormSection">
                 <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">Account Login</h2>
-                <p style="color:var(--text-muted); margin-bottom: 1.5rem;">Login to save your Pantry data to your account.</p>
+                <p style="color:var(--text-muted); margin-bottom: 1.5rem;">Login to save your Pantry data to your
+                    account.</p>
                 <input type="text" id="loginUsername" placeholder="Username or Email">
                 <input type="password" id="loginPassword" placeholder="Password" style="margin-top: 1rem;">
-                <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="loginBtn" onclick="processLogin()">Secure Login</button>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="loginBtn"
+                    onclick="processLogin()">Secure Login</button>
                 <p style="margin-top: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-                    Don't have an account? <button class="btn-link" style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.9rem; text-decoration: underline; padding: 0;" onclick="toggleAuthMode('signup')">Sign up here</button>
+                    Don't have an account? <button class="btn-link"
+                        style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.9rem; text-decoration: underline; padding: 0;"
+                        onclick="toggleAuthMode('signup')">Sign up here</button>
                 </p>
             </div>
 
-            <!-- Signup Form -->
+            <!-- Multi-Step Signup Form -->
             <div id="signupFormSection" style="display: none;">
-                <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">Create Account</h2>
-                <p style="color:var(--text-muted); margin-bottom: 1.5rem;">Join SmartChef Premium today.</p>
-                <input type="text" id="signupFullName" placeholder="Full Name">
-                <input type="text" id="signupUsername" placeholder="Username" style="margin-top: 1rem;">
-                <input type="email" id="signupEmail" placeholder="Email Address" style="margin-top: 1rem;">
-                <input type="password" id="signupPassword" placeholder="Password" style="margin-top: 1rem;">
-                <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="signupBtn" onclick="processSignup()">Create Account</button>
-                <p style="margin-top: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-                    Already have an account? <span style="color: var(--primary-color); cursor: pointer;" onclick="toggleAuthMode('login')">Login here</span>
+                <div class="onboarding-progress">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                    <div class="step-dot active" id="step-dot-1">1</div>
+                    <div class="step-dot" id="step-dot-2">2</div>
+                    <div class="step-dot" id="step-dot-3">3</div>
+                    <div class="step-dot" id="step-dot-4">4</div>
+                    <div class="step-dot" id="step-dot-5">5</div>
+                </div>
+
+                <!-- STEP 1: Account Info -->
+                <div class="signup-step-content active" id="signup-step-1">
+                    <h2 class="glow-primary" style="margin-bottom: 0.5rem;">Create Account</h2>
+                    <p style="color:var(--text-muted); margin-bottom: 2rem;">Let's get your SmartChef profile started.</p>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <input type="text" id="signupFullName" placeholder="Full Name">
+                        <input type="text" id="signupUsername" placeholder="Username">
+                        <input type="email" id="signupEmail" placeholder="Email Address">
+                        <input type="password" id="signupPassword" placeholder="Password">
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 2rem;" onclick="nextSignupStep(1)">Next: Dietary Info <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+
+                <!-- STEP 2: Allergies -->
+                <div class="signup-step-content" id="signup-step-2">
+                    <h2 class="glow-primary" style="margin-bottom: 0.5rem;">Allergies & Avoidance</h2>
+                    <p style="color:var(--text-muted); margin-bottom: 2rem;">Search for products you are allergic to or want to avoid.</p>
+                    <div style="position: relative;">
+                        <input type="text" id="allergySearchInput" placeholder="Search products (e.g. Peanuts, Milk)..." onkeyup="searchSignupAllergies()">
+                        <div id="allergySearchResults" class="search-results"></div>
+                    </div>
+                    <div id="selectedAllergies" class="tag-container" style="min-height: 50px;"></div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn-outline" style="flex: 1;" onclick="nextSignupStep(2, -1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn btn-primary" style="flex: 1;" onclick="nextSignupStep(2)">Next: Cuisines <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Cuisines -->
+                <div class="signup-step-content" id="signup-step-3">
+                    <h2 class="glow-primary" style="margin-bottom: 0.5rem;">Favorite Cuisines</h2>
+                    <p style="color:var(--text-muted); margin-bottom: 2rem;">Select the global flavors you love the most.</p>
+                    <div style="position: relative;">
+                        <input type="text" id="cuisineSearchInput" placeholder="Search cuisines (e.g. Thai, Italian)..." onkeyup="searchSignupCuisines()">
+                        <div id="cuisineSearchResults" class="search-results"></div>
+                    </div>
+                    <div id="selectedCuisines" class="tag-container" style="min-height: 50px;"></div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn-outline" style="flex: 1;" onclick="nextSignupStep(3, -1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn btn-primary" style="flex: 1;" onclick="nextSignupStep(3)">Next: Taste Palate <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Taste Palate -->
+                <div class="signup-step-content" id="signup-step-4">
+                    <h2 class="glow-primary" style="margin-bottom: 0.5rem;">Your Taste Palate</h2>
+                    <p style="color:var(--text-muted); margin-bottom: 2rem;">How do you feel about these core flavors?</p>
+                    
+                    <div id="tastePalateContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Will be populated by JS -->
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn-outline" style="flex: 1;" onclick="nextSignupStep(4, -1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn btn-primary" style="flex: 1;" onclick="nextSignupStep(4)">Next: Personal Info <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 5: Final Info -->
+                <div class="signup-step-content" id="signup-step-5">
+                    <h2 class="glow-primary" style="margin-bottom: 0.5rem;">Final Details</h2>
+                    <p style="color:var(--text-muted); margin-bottom: 2rem;">A bit more about your cooking journey.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div class="taste-slider-group">
+                            <label><span>Cooking Skill Level</span> <span id="cooking-skill-val">5</span></label>
+                            <input type="range" id="signupCookingSkill" min="1" max="10" value="5" oninput="document.getElementById('cooking-skill-val').innerText = this.value">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                <span>Beginner</span>
+                                <span>Expert</span>
+                            </div>
+                        </div>
+
+                        <textarea id="signupBio" placeholder="Tell us a bit about yourself or your food philosophy..." style="min-height: 120px;"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn-outline" style="flex: 1;" onclick="nextSignupStep(5, -1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn btn-primary" style="flex: 1;" onclick="processSignup()">Complete Signup <i class="fa-solid fa-check"></i></button>
+                    </div>
+                </div>
+
+                <p style="margin-top: 2rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                    Already have an account? <span style="color: var(--primary-color); cursor: pointer; text-decoration: underline;" onclick="toggleAuthMode('login')">Login here</span>
                 </p>
             </div>
         </div>

@@ -44,8 +44,56 @@ public class AuthController : ControllerBase
             Username = request.Username,
             Email = request.Email,
             FullName = request.FullName,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Bio = request.Bio ?? string.Empty,
+            CookingSkill = request.CookingSkill,
+            UserTypeId = 1 // Default to Customer
         };
+
+        // 1. Handle Cuisines
+        if (request.CuisineIds != null && request.CuisineIds.Any())
+        {
+            user.FavoriteCuisines = await _context.CuisineTypes
+                .Where(c => request.CuisineIds.Contains(c.Id))
+                .ToListAsync();
+        }
+
+        // 2. Handle Allergies
+        if (request.AllergyIds != null && request.AllergyIds.Any())
+        {
+            var existingProducts = await _context.Products
+                .Where(p => request.AllergyIds.Contains(p.Id))
+                .ToListAsync();
+            user.Allergies.AddRange(existingProducts);
+        }
+
+        if (request.CustomAllergies != null && request.CustomAllergies.Any())
+        {
+            foreach (var custom in request.CustomAllergies)
+            {
+                var newProd = new Product
+                {
+                    Title = custom,
+                    Category = "Allergy",
+                    IsVisible = false // Hidden
+                };
+                _context.Products.Add(newProd);
+                user.Allergies.Add(newProd);
+            }
+        }
+
+        // 3. Handle Taste Palate
+        if (request.TasteRatings != null && request.TasteRatings.Any())
+        {
+            foreach (var rating in request.TasteRatings)
+            {
+                user.TastePalates.Add(new UserTastePalate
+                {
+                    TasteId = rating.Key,
+                    Rating = rating.Value
+                });
+            }
+        }
         
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -118,6 +166,14 @@ public class RegisterRequest
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string? Bio { get; set; }
+    public int CookingSkill { get; set; }
+
+    // Onboarding Data
+    public List<int>? CuisineIds { get; set; }
+    public List<int>? AllergyIds { get; set; }
+    public List<string>? CustomAllergies { get; set; }
+    public Dictionary<int, int>? TasteRatings { get; set; } // TasteId -> Rating
 }
 
 public class LoginRequest

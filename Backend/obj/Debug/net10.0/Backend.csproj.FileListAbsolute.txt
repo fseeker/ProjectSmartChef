@@ -296,4 +296,3 @@ C:\Users\fahim\Downloads\ProjectSmartChef\projectPath\ProjectSmartChef\Backend\o
 C:\Users\fahim\Downloads\ProjectSmartChef\projectPath\ProjectSmartChef\Backend\obj\Debug\net10.0\Backend.genruntimeconfig.cache
 C:\Users\fahim\Downloads\ProjectSmartChef\projectPath\ProjectSmartChef\Backend\obj\Debug\net10.0\ref\Backend.dll
 C:\Users\fahim\Downloads\ProjectSmartChef\projectPath\ProjectSmartChef\Backend\bin\Debug\net10.0\BCrypt.Net-Next.dll
-C:\Users\fahim\Downloads\ProjectSmartChef\projectPath\ProjectSmartChef\Backend\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
