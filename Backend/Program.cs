@@ -49,6 +49,30 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<SmartChefContext>();
     dbContext.Database.Migrate();
+
+    // AUTO-SEEDING
+    if (!dbContext.Set<Backend.Models.Product>().Any())
+    {
+        Console.WriteLine("[INIT] Database is empty. Running seed script...");
+        string seedPath = Path.Combine(frontendDir ?? projectRoot, "seed", "seed_products.sql");
+        if (File.Exists(seedPath))
+        {
+            try
+            {
+                var sql = File.ReadAllText(seedPath);
+                dbContext.Database.ExecuteSqlRaw(sql);
+                Console.WriteLine("[INIT] Seeding complete.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[INIT] Seeding failed: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"[INIT] Seed file not found at: {seedPath}");
+        }
+    }
 }
 
 // 4. PIPELINE
